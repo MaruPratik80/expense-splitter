@@ -1,0 +1,398 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <h1 class="text-xl font-bold text-gray-800">Expense Splitter</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-gray-600">{{ (user$ | async)?.email }}</span>
+        <button
+          (click)="handleLogout()"
+          class="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Sidebar - Groups -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              Groups
+            </h2>
+            <button
+              (click)="openModal('group')"
+              class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="space-y-2">
+            <button
+              *ngFor="let group of groups"
+              (click)="selectGroup(group)"
+              [class]="'w-full text-left p-4 rounded-lg border-2 transition-all ' + 
+                (selectedGroup?.id === group.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300')"
+            >
+              <div class="font-semibold text-gray-800">{{ group.name }}</div>
+              <div class="text-sm text-gray-500 mt-1">{{ group.members.length }} members</div>
+            </button>
+            
+            <div *ngIf="groups.length === 0" class="text-center py-8 text-gray-500">
+              <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <p>No groups yet</p>
+              <p class="text-sm">Create your first group!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="lg:col-span-2">
+        <div *ngIf="selectedGroup; else noGroupSelected" class="space-y-6">
+          <!-- Group Header -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ selectedGroup.name }}</h2>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span *ngFor="let member of selectedGroup.members" 
+                    class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                {{ member }}
+              </span>
+            </div>
+            <button
+              (click)="openModal('expense')"
+              class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Add Expense
+            </button>
+          </div>
+
+          <!-- Balances -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+              Balances
+            </h3>
+            <div class="space-y-3">
+              <div *ngFor="let entry of balances | keyvalue" 
+                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span class="font-medium text-gray-700">{{ entry.key }}</span>
+                <span [class]="'font-bold ' + (entry.value > 0 ? 'text-green-600' : entry.value < 0 ? 'text-red-600' : 'text-gray-600')">
+                  {{ entry.value > 0 ? '+' : '' }}{{ entry.value.toFixed(2) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Settlement Suggestions -->
+            <div *ngIf="settlementSuggestions.length > 0" class="mt-6 pt-6 border-t border-gray-200">
+              <h4 class="font-semibold text-gray-800 mb-3">Settlement Suggestions</h4>
+              <div class="space-y-2">
+                <div *ngFor="let settlement of settlementSuggestions" 
+                      class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <span class="text-sm text-gray-700">
+                    <span class="font-semibold">{{ settlement.from }}</span> pays 
+                    <span class="font-semibold">{{ settlement.to }}</span>
+                    <span class="font-bold text-green-600"> ₹{{ settlement.amount.toFixed(2) }}</span>
+                  </span>
+                  <button
+                    (click)="handleSettleDebt(settlement)"
+                    class="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expenses List -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Recent Expenses
+            </h3>
+            <div class="space-y-3">
+              <div *ngFor="let expense of expenses" 
+                    class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <div class="font-semibold text-gray-800">{{ expense.name }}</div>
+                    <div class="text-sm text-gray-500">
+                      Paid by {{ expense.payer }} • {{ expense.category }}
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-lg font-bold text-gray-800">₹{{ expense.amount.toFixed(2) }}</div>
+                    <div class="text-xs text-gray-500">
+                      {{ (expense.date)?.toDate() | date:'shortDate' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                  <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                    {{ expense.splitType }}
+                  </span>
+                  <span>• Split among {{ expense.beneficiaries.length }} members</span>
+                </div>
+                <div *ngIf="expense.receiptImageUrl" class="mt-2">
+                  <img [src]="expense.receiptImageUrl" alt="Receipt" class="h-20 object-cover rounded border">
+                </div>
+              </div>
+              
+              <div *ngIf="expenses.length === 0" class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p>No expenses yet</p>
+                <p class="text-sm">Add your first expense!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noGroupSelected>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Select a Group</h3>
+            <p class="text-gray-600">Choose a group from the sidebar to view expenses</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-800">
+          {{ modalType === 'group' ? 'Create New Group' : 'Add New Expense' }}
+        </h3>
+        <button (click)="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Group Form -->
+        <div *ngIf="modalType === 'group'" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
+            <input
+              type="text"
+              [(ngModel)]="groupName"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., Roommates, Trip to Europe"
+            />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Members</label>
+            <div *ngFor="let member of groupMembers; let i = index" class="flex gap-2 mb-2">
+              <input
+                type="text"
+                [(ngModel)]="groupMembers[i]"
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Member name"
+              />
+              <button
+                *ngIf="groupMembers.length > 1"
+                (click)="removeMember(i)"
+                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+            <button
+              (click)="addMember()"
+              class="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+              </svg>
+              Add Member
+            </button>
+          </div>
+
+          <button
+            (click)="handleCreateGroup()"
+            class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+          >
+            Create Group
+          </button>
+        </div>
+
+        <!-- Expense Form -->
+        <div *ngIf="modalType === 'expense'" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Expense Name</label>
+              <input
+                type="text"
+                [(ngModel)]="expenseName"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., Dinner at restaurant"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <input
+                type="number"
+                [(ngModel)]="expenseAmount"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                [(ngModel)]="expenseCategory"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Paid By</label>
+              <select
+                [(ngModel)]="expensePayer"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select payer</option>
+                <option *ngFor="let member of selectedGroup?.members" [value]="member">{{ member }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Split Type</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button
+                *ngFor="let type of splitTypes"
+                (click)="setSplitType(type.value)"
+                [class]="'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ' +
+                  (splitType === type.value ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:border-gray-400 text-gray-700')"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="type.icon"></path>
+                </svg>
+                <span class="text-xs font-medium">{{ type.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="splitType !== 'equal'" class="p-4 bg-gray-50 rounded-lg space-y-3">
+            <h4 class="text-sm font-semibold text-gray-700">
+              {{ getSplitTypeLabel() }}
+            </h4>
+            <div *ngFor="let member of selectedGroup?.members" class="flex items-center gap-3">
+              <label class="flex-1 text-sm font-medium text-gray-700">{{ member }}</label>
+              <input
+                type="number"
+                [(ngModel)]="splitData[member]"
+                class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                [placeholder]="splitType === 'percentage' ? '0%' : '0.00'"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Receipt (Optional)</label>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+              <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <p class="text-sm text-gray-600">Click to upload or drag and drop</p>
+              <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                class="hidden"
+                #fileInput
+              />
+              <button
+                type="button"
+                (click)="fileInput.click()"
+                class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Choose File
+              </button>
+            </div>
+            <div *ngIf="receiptPreview" class="mt-3 relative">
+              <img [src]="receiptPreview" alt="Receipt" class="w-full h-32 object-cover rounded-lg" />
+              <button
+                (click)="removeReceipt()"
+                class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 bg-blue-50 rounded-lg flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-blue-900">Email Notifications</p>
+              <p class="text-xs text-blue-700 mt-1">All group members will be notified via email about this expense</p>
+            </div>
+          </div>
+
+          <button
+            (click)="handleAddExpense()"
+            class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+          >
+            Add Expense
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
