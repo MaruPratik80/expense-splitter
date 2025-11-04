@@ -1,0 +1,253 @@
+<div class="max-w-7xl mx-auto">
+      @if (group(); as group) {
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div class="flex justify-between items-start">
+            <div>
+              <button mat-icon-button (click)="goBack()" class="mb-2">
+                <mat-icon>arrow_back</mat-icon>
+              </button>
+              <h1 class="text-3xl font-bold text-gray-800">{{ group.name }}</h1>
+              <p class="text-gray-600 mt-2">{{ group.description }}</p>
+              <div class="flex items-center mt-4 text-gray-600">
+                <mat-icon class="mr-2">people</mat-icon>
+                <span>{{ group.members.length }} member(s)</span>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button mat-raised-button color="primary" (click)="openAddExpense()">
+                <mat-icon>add</mat-icon>
+                Add Expense
+              </button>
+              @if (isAdmin()) {
+                <button mat-icon-button [matMenuTriggerFor]="menu">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="openAddMember()">
+                    <mat-icon>person_add</mat-icon>
+                    <span>Add Member</span>
+                  </button>
+                  <button mat-menu-item (click)="editGroup()">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit Group</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteGroup()" class="text-red-600">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete Group</span>
+                  </button>
+                </mat-menu>
+              }
+            </div>
+          </div>
+
+          <!-- Members -->
+          <div class="mt-6">
+            <h3 class="text-lg font-semibold mb-3">Members</h3>
+            <div class="flex flex-wrap gap-2">
+              @for (member of group.members; track member.uid) {
+                <mat-chip-row class="relative">
+                  {{ member.displayName }}
+                  @if (member.uid === group.adminId) {
+                    <mat-icon matChipAvatar class="ml-1">admin_panel_settings</mat-icon>
+                  }
+                  @if (isAdmin() && member.uid !== group.adminId) {
+                    <button matChipRemove (click)="removeMember(member)">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  }
+                </mat-chip-row>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <mat-tab-group>
+          <!-- Expenses Tab -->
+          <mat-tab label="Expenses">
+            <div class="py-6">
+              @if (expenses().length === 0) {
+                <div class="text-center py-12 bg-white rounded-lg">
+                  <mat-icon class="text-6xl text-gray-400 mb-4">receipt_long</mat-icon>
+                  <h3 class="text-xl font-semibold text-gray-700 mb-2">No Expenses Yet</h3>
+                  <p class="text-gray-600 mb-6">Start by adding your first expense</p>
+                  <button mat-raised-button color="primary" (click)="openAddExpense()">
+                    Add Expense
+                  </button>
+                </div>
+              } @else {
+                <div class="space-y-4">
+                  @for (expense of expenses(); track expense.id) {
+                    <mat-card class="hover:shadow-lg transition-shadow">
+                      <mat-card-content>
+                        <div class="flex justify-between items-start">
+                          <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <mat-icon class="text-blue-600">{{ getCategoryIcon(expense.category) }}</mat-icon>
+                              </div>
+                              <div>
+                                <h3 class="text-lg font-semibold">{{ expense.description }}</h3>
+                                <p class="text-sm text-gray-600">{{ expense.category }}</p>
+                                <p class="text-xs text-gray-500">
+                                  {{ expense.createdAt | date:'medium' }}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div class="mt-4 grid grid-cols-2 gap-4">
+                              <div>
+                                <p class="text-sm text-gray-600">Paid by:</p>
+                                @for (payer of expense.payers; track payer.uid) {
+                                  <p class="text-sm">
+                                    {{ payer.displayName }}: ₹{{ payer.amount.toFixed(2) }}
+                                  </p>
+                                }
+                              </div>
+                              <div>
+                                <p class="text-sm text-gray-600">Split among:</p>
+                                @for (beneficiary of expense.beneficiaries; track beneficiary.uid) {
+                                  <p class="text-sm">
+                                    {{ beneficiary.displayName }}: ₹{{ beneficiary.amount.toFixed(2) }}
+                                  </p>
+                                }
+                              </div>
+                            </div>
+
+                            @if (expense.receiptUrl) {
+                              <div class="mt-3">
+                                <a [href]="expense.receiptUrl" target="_blank" 
+                                   class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                                  <mat-icon class="text-sm">attach_file</mat-icon>
+                                  View Receipt
+                                </a>
+                              </div>
+                            }
+                          </div>
+                          
+                          <div class="text-right">
+                            <div class="text-2xl font-bold text-green-600">
+                              ₹{{ expense.totalAmount.toFixed(2) }}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                              {{ expense.splitType }}
+                            </div>
+                          </div>
+                        </div>
+                      </mat-card-content>
+                    </mat-card>
+                  }
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Balances Tab -->
+          <mat-tab label="Balances">
+            <div class="py-6">
+              @if (simplifiedDebts().length === 0) {
+                <div class="text-center py-12 bg-white rounded-lg">
+                  <mat-icon class="text-6xl text-gray-400 mb-4">account_balance</mat-icon>
+                  <h3 class="text-xl font-semibold text-gray-700 mb-2">All Settled Up!</h3>
+                  <p class="text-gray-600">No outstanding balances in this group</p>
+                </div>
+              } @else {
+                <div class="bg-white rounded-lg p-6">
+                  <h3 class="text-xl font-semibold mb-4">Suggested Settlements</h3>
+                  <p class="text-gray-600 mb-6">Simplified debt settlements to minimize transactions</p>
+                  
+                  <div class="space-y-4">
+                    @for (debt of simplifiedDebts(); track debt.from + debt.to) {
+                      <div class="border rounded-lg p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                          <div class="text-center">
+                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-1 mx-auto">
+                              <span class="text-lg font-bold text-red-600">
+                                {{ debt.fromName.charAt(0).toUpperCase() }}
+                              </span>
+                            </div>
+                            <p class="text-sm font-medium">{{ debt.fromName }}</p>
+                          </div>
+                          
+                          <div class="flex flex-col items-center">
+                            <mat-icon class="text-gray-400">arrow_forward</mat-icon>
+                            <span class="text-xs text-gray-500">owes</span>
+                          </div>
+                          
+                          <div class="text-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-1 mx-auto">
+                              <span class="text-lg font-bold text-green-600">
+                                {{ debt.toName.charAt(0).toUpperCase() }}
+                              </span>
+                            </div>
+                            <p class="text-sm font-medium">{{ debt.toName }}</p>
+                          </div>
+                          
+                          <div class="ml-4">
+                            <p class="text-2xl font-bold text-orange-600">
+                              ₹{{ debt.amount.toFixed(2) }}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        @if (debt.to === currentUserId()) {
+                          <button mat-raised-button color="accent" 
+                                  (click)="settleDebt(debt)">
+                            Mark as Settled
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Settlement History Tab -->
+          <mat-tab label="Settlement History">
+            <div class="py-6">
+              @if (settlements().length === 0) {
+                <div class="text-center py-12 bg-white rounded-lg">
+                  <mat-icon class="text-6xl text-gray-400 mb-4">history</mat-icon>
+                  <h3 class="text-xl font-semibold text-gray-700 mb-2">No Settlements Yet</h3>
+                  <p class="text-gray-600">Settlement history will appear here</p>
+                </div>
+              } @else {
+                <div class="space-y-4">
+                  @for (settlement of settlements(); track settlement.id) {
+                    <mat-card>
+                      <mat-card-content>
+                        <div class="flex justify-between items-center">
+                          <div>
+                            <p class="text-lg">
+                              <span class="font-semibold">{{ settlement.fromUserName }}</span>
+                              paid
+                              <span class="font-semibold">{{ settlement.toUserName }}</span>
+                            </p>
+                            <p class="text-sm text-gray-600">
+                              {{ settlement.settledAt | date:'medium' }}
+                            </p>
+                          </div>
+                          <div class="text-right">
+                            <p class="text-2xl font-bold text-green-600">
+                              ₹{{ settlement.amount.toFixed(2) }}
+                            </p>
+                            <p class="text-xs text-gray-500">Settled</p>
+                          </div>
+                        </div>
+                      </mat-card-content>
+                    </mat-card>
+                  }
+                </div>
+              }
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      } @else {
+        <div class="text-center py-12">
+          <p class="text-gray-600">Loading group details...</p>
+        </div>
+      }
+    </div>

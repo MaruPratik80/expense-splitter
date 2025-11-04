@@ -1,0 +1,8 @@
+mat-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+mat-card:hover {
+  transform: translateY(-4px);
+}

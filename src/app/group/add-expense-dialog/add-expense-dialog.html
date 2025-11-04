@@ -1,0 +1,163 @@
+<h2 mat-dialog-title>Add Expense</h2>
+    <mat-dialog-content class="max-h-[70vh] overflow-y-auto">
+      <form [formGroup]="expenseForm" class="space-y-4 py-2">
+        <!-- Basic Info -->
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Description</mat-label>
+          <input matInput formControlName="description" placeholder="e.g., Dinner at restaurant">
+          @if (expenseForm.get('description')?.hasError('required')) {
+            <mat-error>Description is required</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="grid grid-cols-2 gap-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input matInput type="number" formControlName="totalAmount" 
+                   placeholder="0.00" step="0.01">
+            <span matPrefix>$&nbsp;</span>
+            @if (expenseForm.get('totalAmount')?.hasError('required')) {
+              <mat-error>Amount is required</mat-error>
+            }
+            @if (expenseForm.get('totalAmount')?.hasError('min')) {
+              <mat-error>Amount must be greater than 0</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category">
+              @for (category of categories; track category) {
+                <mat-option [value]="category">{{ category }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Payers -->
+        <div class="border rounded p-4">
+          <h3 class="font-semibold mb-3">Who paid?</h3>
+          <div formArrayName="payers" class="space-y-3">
+            @for (payer of payersArray.controls; track $index) {
+              <div [formGroupName]="$index" class="flex items-center gap-3">
+                <mat-checkbox formControlName="selected" 
+                              (change)="onPayerChange($index)">
+                  {{ group.members[$index].displayName }}
+                </mat-checkbox>
+                @if (payer.get('selected')?.value) {
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Amount</mat-label>
+                    <input matInput type="number" formControlName="amount" 
+                           step="0.01">
+                    <span matPrefix>$&nbsp;</span>
+                  </mat-form-field>
+                }
+              </div>
+            }
+          </div>
+          @if (getTotalPaid() !== expenseForm.get('totalAmount')?.value && expenseForm.get('totalAmount')?.value > 0) {
+            <p class="text-red-600 text-sm mt-2">
+              Total paid (₹{{ getTotalPaid().toFixed(2) }}) must equal expense amount 
+              (₹{{ expenseForm.get('totalAmount')?.value?.toFixed(2) }})
+            </p>
+          }
+        </div>
+
+        <!-- Split Type -->
+        <div class="border rounded p-4">
+          <h3 class="font-semibold mb-3">How to split?</h3>
+          <mat-radio-group formControlName="splitType" class="flex flex-col gap-2">
+            <mat-radio-button value="equal">Split Equally</mat-radio-button>
+            <mat-radio-button value="exact">Exact Amounts</mat-radio-button>
+            <mat-radio-button value="percentage">By Percentage</mat-radio-button>
+            <mat-radio-button value="shares">By Shares</mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        <!-- Beneficiaries -->
+        <div class="border rounded p-4">
+          <h3 class="font-semibold mb-3">Split among</h3>
+          <div formArrayName="beneficiaries" class="space-y-3">
+            @for (beneficiary of beneficiariesArray.controls; track $index) {
+              <div [formGroupName]="$index">
+                <div class="flex items-center gap-3">
+                  <mat-checkbox formControlName="selected"
+                                (change)="onBeneficiaryChange()">
+                    {{ group.members[$index].displayName }}
+                  </mat-checkbox>
+                  
+                  @if (beneficiary.get('selected')?.value) {
+                    @if (expenseForm.get('splitType')?.value === 'exact') {
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Amount</mat-label>
+                        <input matInput type="number" formControlName="amount" 
+                               step="0.01">
+                        <span matPrefix>$&nbsp;</span>
+                      </mat-form-field>
+                    } @else if (expenseForm.get('splitType')?.value === 'percentage') {
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Percentage</mat-label>
+                        <input matInput type="number" formControlName="percentage" 
+                               step="0.01" (input)="calculateFromPercentage($index)">
+                        <span matSuffix>%</span>
+                      </mat-form-field>
+                    } @else if (expenseForm.get('splitType')?.value === 'shares') {
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Shares</mat-label>
+                        <input matInput type="number" formControlName="shares"
+                               (input)="calculateFromShares()">
+                      </mat-form-field>
+                    } @else {
+                      <span class="text-gray-600">
+                        ₹{{ getEqualSplitAmount().toFixed(2) }}
+                      </span>
+                    }
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          
+          @if (expenseForm.get('splitType')?.value === 'exact' && !isExactSplitValid()) {
+            <p class="text-red-600 text-sm mt-2">
+              Total split amount must equal expense amount
+            </p>
+          }
+          @if (expenseForm.get('splitType')?.value === 'percentage' && !isPercentageValid()) {
+            <p class="text-red-600 text-sm mt-2">
+              Total percentage must equal 100%
+            </p>
+          }
+        </div>
+
+        <!-- Receipt Upload -->
+        <div class="border rounded p-4">
+          <h3 class="font-semibold mb-3">Receipt (Optional)</h3>
+          <input type="file" accept="image/*" (change)="onFileSelected($event)"
+                 class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100">
+          @if (selectedFile()) {
+            <p class="text-sm text-green-600 mt-2">
+              <mat-icon class="text-sm align-middle">check_circle</mat-icon>
+              {{ selectedFile()?.name }}
+            </p>
+          }
+        </div>
+      </form>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary" 
+              (click)="onSubmit()" 
+              [disabled]="!isFormValid() || loading">
+        @if (loading) {
+          <span>Adding...</span>
+        } @else {
+          <span>Add Expense</span>
+        }
+      </button>
+    </mat-dialog-actions>

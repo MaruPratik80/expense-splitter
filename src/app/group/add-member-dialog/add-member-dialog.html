@@ -1,0 +1,32 @@
+<h2 mat-dialog-title>Add Member</h2>
+    <mat-dialog-content>
+      <form [formGroup]="memberForm" class="space-y-4 pt-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Member Email</mat-label>
+          <input matInput type="email" formControlName="email" 
+                 placeholder="Enter member's email">
+          @if (memberForm.get('email')?.hasError('required')) {
+            <mat-error>Email is required</mat-error>
+          }
+          @if (memberForm.get('email')?.hasError('email')) {
+            <mat-error>Invalid email format</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage) {
+          <p class="text-red-600 text-sm">{{ errorMessage }}</p>
+        }
+      </form>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary" 
+              (click)="onAdd()" 
+              [disabled]="memberForm.invalid || loading">
+        @if (loading) {
+          <span>Adding...</span>
+        } @else {
+          <span>Add Member</span>
+        }
+      </button>
+    </mat-dialog-actions>

@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>Create New Group</h2>
+    <mat-dialog-content>
+      <form [formGroup]="groupForm" class="space-y-4 pt-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Group Name</mat-label>
+          <input matInput formControlName="name" placeholder="e.g., Weekend Trip">
+          @if (groupForm.get('name')?.hasError('required')) {
+            <mat-error>Group name is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3"
+                    placeholder="What is this group for?"></textarea>
+        </mat-form-field>
+      </form>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary" 
+              (click)="onCreate()" 
+              [disabled]="groupForm.invalid || loading">
+        @if (loading) {
+          <span>Creating...</span>
+        } @else {
+          <span>Create</span>
+        }
+      </button>
+    </mat-dialog-actions>
