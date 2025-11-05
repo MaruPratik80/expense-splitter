@@ -76,15 +76,6 @@ export class GroupService {
         members: arrayUnion(member),
         updatedAt: new Date(),
       })
-    ).pipe(
-      switchMap(() => {
-        const userRef = doc(this.firestore, `users/${member.uid}`);
-        return from(
-          updateDoc(userRef, {
-            groups: arrayUnion(groupId),
-          })
-        );
-      })
     );
   }
 
@@ -94,15 +85,6 @@ export class GroupService {
       updateDoc(groupRef, {
         members: arrayRemove(member),
         updatedAt: new Date(),
-      })
-    ).pipe(
-      switchMap(() => {
-        const userRef = doc(this.firestore, `users/${member.uid}`);
-        return from(
-          updateDoc(userRef, {
-            groups: arrayRemove(groupId),
-          })
-        );
       })
     );
   }

@@ -2,18 +2,10 @@
       @if (group(); as group) {
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div class="flex justify-between items-start">
-            <div>
-              <button mat-icon-button (click)="goBack()" class="mb-2">
+          <div class="flex justify-between items-start mb-2">
+              <button mat-icon-button (click)="goBack()">
                 <mat-icon>arrow_back</mat-icon>
               </button>
-              <h1 class="text-3xl font-bold text-gray-800">{{ group.name }}</h1>
-              <p class="text-gray-600 mt-2">{{ group.description }}</p>
-              <div class="flex items-center mt-4 text-gray-600">
-                <mat-icon class="mr-2">people</mat-icon>
-                <span>{{ group.members.length }} member(s)</span>
-              </div>
-            </div>
             <div class="flex gap-2">
               <button mat-raised-button color="primary" (click)="openAddExpense()">
                 <mat-icon>add</mat-icon>
@@ -28,10 +20,10 @@
                     <mat-icon>person_add</mat-icon>
                     <span>Add Member</span>
                   </button>
-                  <button mat-menu-item (click)="editGroup()">
+                  <!-- <button mat-menu-item (click)="editGroup()">
                     <mat-icon>edit</mat-icon>
                     <span>Edit Group</span>
-                  </button>
+                  </button> -->
                   <button mat-menu-item (click)="deleteGroup()" class="text-red-600">
                     <mat-icon>delete</mat-icon>
                     <span>Delete Group</span>
@@ -39,6 +31,12 @@
                 </mat-menu>
               }
             </div>
+          </div>
+          <h1 class="text-3xl font-bold text-gray-800">{{ group.name }}</h1>
+          <p class="text-gray-600 mt-2">{{ group.description }}</p>
+          <div class="flex items-center mt-4 text-gray-600">
+            <mat-icon class="mr-2">people</mat-icon>
+            <span>{{ group.members.length }} member(s)</span>
           </div>
 
           <!-- Members -->

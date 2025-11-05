@@ -6,3 +6,7 @@ mat-card {
 mat-card:hover {
   transform: translateY(-4px);
 }
+
+.group-header ::ng-deep .mat-mdc-card-header-text {
+  overflow: hidden;
+}

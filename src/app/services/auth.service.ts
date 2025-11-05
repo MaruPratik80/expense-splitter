@@ -65,7 +65,7 @@ export class AuthService {
       uid: user.uid,
       email: user.email!,
       displayName: displayName,
-      photoURL: user.photoURL || undefined,
+      photoURL: user.photoURL || '',
       createdAt: new Date(),
       groups: [],
     };

@@ -23,14 +23,14 @@
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           @for (group of groups(); track group.id) {
-            <mat-card class="cursor-pointer hover:shadow-lg transition-shadow" 
+            <mat-card class="cursor-pointer hover:shadow-lg transition-shadow justify-between" 
                       (click)="navigateToGroup(group.id!)">
-              <mat-card-header class="flex items-center justify-between">
-                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+              <mat-card-header class="group-header flex items-center justify-between">
+                <div class="self-start shrink-0 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
                   {{ group.name.charAt(0).toUpperCase() }}
                 </div>
                 <mat-card-title class="ml-3 truncate">{{ group.name }}</mat-card-title>
-                <mat-card-subtitle class="ml-3">{{ group.description }}</mat-card-subtitle>
+                <mat-card-subtitle class="!text-gray-600 ml-3 !line-clamp-2 overflw-text-ellipsis">{{ group.description }}</mat-card-subtitle>
               </mat-card-header>
               
               <mat-card-content class="mt-4 mb-2">
